@@ -1,0 +1,77 @@
+#!/bin/bash
+
+# PROYECTO: Filogenia Mustelidae con el gen RAG1
+# Autor: Galo Bolagay Suárez
+# Email: gbolagaysuarez@outlook.es
+
+# ============================
+# 0. CREAR DIRECTORIO DE TRABAJO
+# ============================
+mkdir -p FINAL_PROJECT_MUSTELIDAE/{raw_data,aligned,trees,logs}
+cd FINAL_PROJECT_MUSTELIDAE
+
+# ============================
+# 1. DESCARGAR SECUENCIAS DE NCBI (GEN RAG1)
+# ============================
+# Requiere 'edirect' de NCBI: instalar con 
+# sudo apt install -y entrez-direct
+
+echo "Descargando secuencias del gen RAG1 para Mustelidae desde NCBI..."
+
+esearch -db nucleotide -query "RAG1[Gene] AND Mustelidae[Organism]" | \
+efetch -format fasta > raw_data/RAG1_Mustelidae.fasta
+
+echo "Descarga completada. Archivo guardado en raw_data/RAG1_Mustelidae.fasta"
+
+# ============================
+# 2. VALIDACIÓN Y EDICIÓN MANUAL (opcional)
+# ============================
+# atom raw_data/RAG1_Mustelidae.fasta
+# Manual: eliminar secuencias malas, sin anotación, muy cortas, etc.
+
+# ============================
+# 3. ALINEAMIENTO DE SECUENCIAS CON MUSCLE
+# ============================
+echo "Iniciando alineamiento con MUSCLE..."
+
+muscle -in raw_data/RAG1_Mustelidae.fasta -out aligned/RAG1_aligned.fasta
+
+echo "Alineamiento completado. Archivo en aligned/RAG1_aligned.fasta"
+
+# ============================
+# 4. ANÁLISIS FILOGENÉTICO CON IQ-TREE
+# ============================
+echo "Iniciando reconstrucción filogenética con IQ-TREE..."
+
+# -m MFP: búsqueda automática del mejor modelo
+# -bb 1000: bootstrap ultrarrápido con 1000 réplicas
+# -nt AUTO: autoajuste de núcleos
+# -pre: prefijo para nombrar archivos de salida
+
+iqtree2 -s aligned/RAG1_aligned.fasta \
+        -m MFP \
+        -bb 1000 \
+        -nt AUTO \
+        -pre trees/RAG1_Mustelidae
+
+echo "Análisis filogenético completado. Archivos en carpeta 'trees/'"
+
+# ============================
+# 5. VISUALIZACIÓN CON FIGTREE (MANUAL)
+# ============================
+echo "Para visualizar el árbol filogenético, abre el archivo:"
+echo "$(pwd)/trees/RAG1_Mustelidae.treefile con FigTree"
+
+# ============================
+# 6. VERSIONAMIENTO CON GIT (OPCIONAL)
+# ============================
+echo "Inicializando repositorio Git..."
+
+git init
+git add .
+git commit -m "Proyecto filogenia Mustelidae - primer commit"
+echo "Repositorio Git creado. Sube a GitHub si deseas."
+
+# ============================
+# 7. FIN
+# ============================
